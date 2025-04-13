@@ -1,0 +1,370 @@
+// 네덜란드어 (Dutch)
+export const nlTranslations = {
+  common: {
+    title: "mirror.",
+    tagline: "AI-reflecties van jouw creativiteit",
+    description:
+      "Analyseer je foto's met geavanceerde AI om gedetailleerde feedback te ontvangen over compositie, belichting, technische aspecten en meer.",
+    startAnalyzing: "Begin met analyseren",
+    startNow: "Nu beginnen",
+    features: "Functies",
+    howItWorks: "Hoe het werkt",
+    language: "Taal",
+    login: "Inloggen",
+    logout: "Uitloggen",
+    saveYourResults: "Log in om je resultaten op te slaan",
+    account: "Mijn account",
+    score: "Score",
+    cancel: "Annuleren",
+    delete: "Verwijderen",
+    user: "Gebruiker",
+    back: "Terug",
+    backToHome: "Terug naar startpagina",
+    loginRequired: "Inloggen vereist",
+    pleaseLoginToView: "Log in om deze pagina te bekijken"
+  },
+  navigation: {
+    home: "Startpagina",
+    myPage: "Mijn pagina",
+    myHistory: "Mijn geschiedenis"
+  },
+  features: {
+    title: "Functies",
+    aiPowered: {
+      title: "AI-gestuurde fotoanalyse",
+      description:
+        "Ontvang feedback van professioneel niveau op je foto's met ons geavanceerde AI-analysesysteem"
+    },
+    composition: {
+      title: "Compositie",
+      description:
+        "Analyseer kadrering, de regel van derden, balans, symmetrie, leidende lijnen en algehele visuele structuur."
+    },
+    lighting: {
+      title: "Belichting",
+      description:
+        "Evalueer belichting, contrast, highlights, schaduwen en algehele belichtingstechnieken."
+    },
+    technical: {
+      title: "Technisch",
+      description:
+        "Beoordeel focus, scherptediepte, scherpte, ruisniveaus en camera-instellingen."
+    },
+    categories: {
+      title: "Meerdere categorieën",
+      description:
+        "Gespecialiseerde analyse voor portret-, landschaps-, zwart-wit-, architectuur- en macrofotografie."
+    },
+    multilingual: {
+      title: "Meertalig",
+      description:
+        "Ondersteuning voor 14 talen, waaronder Engels, Japans, Koreaans, Chinees en Europese talen."
+    },
+    feedback: {
+      title: "Praktische feedback",
+      description:
+        "Specifieke sterke punten en praktische suggesties voor verbetering in elke fotocategorie."
+    }
+  },
+  howItWorks: {
+    title: "Hoe het werkt",
+    subtitle: "Eenvoudig driestappenproces",
+    description:
+      "Ontvang deskundige fotoanalyse in enkele minuten met onze gestroomlijnde workflow",
+    step1: {
+      title: "1 Upload je foto",
+      description:
+        "Upload simpelweg je foto vanaf je apparaat. We ondersteunen verschillende beeldformaten en optimaliseren ze automatisch."
+    },
+    step2: {
+      title: "2 Kies analyseopties",
+      description:
+        "Selecteer je voorkeursbeoordelingsstijl, analysediepte, fotografiecategorie en taal voor gepersonaliseerde resultaten."
+    },
+    step3: {
+      title: "3 Ontvang gedetailleerde feedback",
+      description:
+        "Ontvang uitgebreide analyse met scores en praktische suggesties om je fotografievaardigheden te verbeteren."
+    }
+  },
+  cta: {
+    title: "Klaar om je fotografie te verbeteren?",
+    description:
+      "Ontvang gedetailleerde AI-gestuurde feedback op je foto's en breng je vaardigheden naar een hoger niveau.",
+    button: "Nu beginnen"
+  },
+  upload: {
+    title: "Upload je foto",
+    dragDrop: "Sleep je foto hierheen",
+    or: "of",
+    browse: "Blader door bestanden",
+    supportedFormats: "Ondersteunde formaten: JPG, PNG 25MB",
+    preview: "Voorbeeld",
+    changePhoto: "Wijzig foto",
+    continue: "Doorgaan naar opties",
+    uploading: "Uploaden...",
+    selectPhoto: "Selecteer foto",
+    errors: {
+      invalidType: "Ongeldig bestandstype",
+      mustBeImage: "Bestand moet een JPG- of PNG-afbeelding zijn",
+      fileTooLarge: "Bestand te groot",
+      maxSize: "Maximale bestandsgrootte is 25MB",
+      uploadFailed: "Upload mislukt",
+      tryAgain: "Probeer het later opnieuw"
+    },
+    warnings: {
+      exifDataIssue: "EXIF-gegevensprobleem",
+      limitedExifData:
+        "Sommige EXIF-gegevens konden niet worden verwerkt. Mogelijk is beperkte camera-informatie beschikbaar."
+    }
+  },
+  options: {
+    title: "Kies analyseopties",
+    subtitle: "Pas je analyse aan",
+    description: "Kies hoe je foto geanalyseerd moet worden. Elke optie beïnvloedt de focus en toon van de feedback.",
+    photoToAnalyze: "Te analyseren foto",
+    loading: "Laden...",
+    focusPoint: {
+      title: "Analysefocus",
+      description: "Deze optie bepaalt het focusgebied van de fotoanalyse. Je kunt kiezen om technische aspecten of artistieke elementen te benadrukken.",
+      balanced: "Gebalanceerd",
+      technical: "Technische focus",
+      artistic: "Artistieke focus",
+      originality: "Originaliteitsfocus",
+      genre: "Genrespecifiek"
+    },
+    persona: {
+      title: "Beoordelingsstijl",
+      description: "Bepaalt de toon en stijl van de feedback. Kies van vriendelijk advies tot strenge kritiek.",
+      kindTeacher: "Vriendelijke leraar",
+      strictProfessor: "Strenge professor",
+      harshCritic: "Harde criticus",
+      emotionalWriter: "Emotionele schrijver",
+      bigFan: "Je grootste fan"
+    },
+    detail: {
+      title: "Detailniveau",
+      simple: "Eenvoudig (Samenvatting)",
+      balanced: "Gebalanceerd (Samenvatting + Feedback)",
+      detailed: "Gedetailleerd (Volledige analyse)",
+      alwaysDetailed: "Altijd gedetailleerde analyse gebruiken voor de beste resultaten"
+    },
+    language: {
+      title: "Taal",
+      feedbackOnly: "Dit beïnvloedt alleen de taal van je fotoanalyseresultaten",
+      uiSeparate: "niet de interfacetaal.",
+      supportedCount: "We ondersteunen 14 talen voor analysefeedback.",
+      selectLabel: "Selecteer analysetaal",
+      en: "Engels (English)",
+      ko: "Koreaans (한국어)",
+      ja: "Japans (日本語)",
+      zh_CN: "Vereenvoudigd Chinees (简体中文)",
+      zh_TW: "Traditioneel Chinees (繁體中文)",
+      fr: "Frans (Français)",
+      es: "Spaans (Español)",
+      de: "Duits (Deutsch)",
+      nl: "Nederlands",
+      it: "Italiaans (Italiano)",
+      pt: "Portugees (Português)",
+      vi: "Vietnamees (Tiếng Việt)",
+      th: "Thais (ภาษาไทย)",
+      id: "Indonesisch (Bahasa Indonesia)"
+    },
+    analyze: "Foto analyseren",
+    submitting: "Verzenden...",
+    errors: {
+      noPhoto: "Geen foto gevonden",
+      pleaseUpload: "Upload eerst een foto",
+      invalidData: "Ongeldig gegevensformaat",
+      submissionFailed: "Verzending mislukt",
+      tryAgain: "Probeer het later opnieuw"
+    }
+  },
+  loading: {
+    analyzing: "Je foto analyseren met AI...",
+    patience: "Dit kan even duren",
+    processing: "Je foto verwerken",
+    step1: "Compositie en technische elementen analyseren...",
+    step2: "Artistieke kwaliteiten evalueren...",
+    step3: "Gedetailleerde feedback genereren...",
+    step4: "Resultaten afronden...",
+    analysisInProgress: "Analyse in uitvoering",
+    waitingForResults: "Je analyse wordt al verwerkt. Wacht even terwijl we de resultaten controleren.",
+    errors: {
+      missingData: "Vereiste gegevens ontbreken",
+      pleaseUpload: "Begin opnieuw door een foto te uploaden",
+      invalidData: "Ongeldig gegevensformaat",
+      analysisFailed: "Analyse mislukt",
+      tryAgain: "Probeer het later opnieuw",
+      tryAgainLater: "Probeer het over enkele minuten opnieuw",
+      timeout: "Analyse time-out",
+      alreadyProcessing: "Analyse is al bezig"
+    }
+  },
+  results: {
+    loading: "Resultaten laden...",
+    score: "Score",
+    exifInfo: "Camera-info",
+    noExifData: "Geen camera-info beschikbaar",
+    noDataAvailable: "Geen gegevens beschikbaar voor dit gedeelte",
+    noAnalysisText: "Geen analysetekst beschikbaar",
+    detectedGenre: "Genre",
+    unknownGenre: "Onbekend",
+    genreSpecific: "{{genre}} fotografietips",
+    photographyTips: "Fotografietips",
+    aspectRatio: "Beeldverhouding",
+    portrait: "Portret (4:5)",
+    square: "Vierkant (1:1)",
+    landscape: "Landschap (3:2)",
+    scrollForMore: "Scroll voor meer",
+    categories: {
+      title: "Categoriescores",
+      composition: "Compositie",
+      lighting: "Belichting",
+      color: "Kleur",
+      focus: "Focus",
+      creativity: "Creativiteit"
+    },
+    overall: "Algehele beoordeling",
+    strengths: "Sterke punten",
+    improvements: "Verbeterpunten",
+    strength: "Sterkte",
+    improvement: "Verbeterpunt",
+    modifications: "Voorgestelde wijzigingen",
+    composition: "Compositie",
+    lighting: "Belichting en blootstelling",
+    color: "Kleur en toon",
+    focus: "Focus en helderheid",
+    creativity: "Verhaal en originaliteit",
+    assessment: "Beoordeling",
+    suggestions: "Suggesties",
+    share: "Resultaat delen",
+    shareCopy: "Mijn foto scoorde {{score}} op mirror!",
+    copied: "Gekopieerd!",
+    linkCopied: "Link gekopieerd naar klembord",
+    analyzeAnother: "Nog een foto analyseren",
+    goToUpload: "Een foto uploaden",
+    errors: {
+      missingData: "Resultaatgegevens ontbreken",
+      pleaseUpload: "Begin opnieuw door een foto te uploaden",
+      invalidData: "Ongeldig gegevensformaat",
+      fetchFailed: "Analyse ophalen mislukt",
+      shareFailed: "Delen mislukt",
+      tryAgain: "Probeer het later opnieuw"
+    }
+  },
+  footer: {
+    terms: "Servicevoorwaarden",
+    privacy: "Privacybeleid",
+    contact: "Contact",
+    allRightsReserved: "Alle rechten voorbehouden."
+  },
+  myPage: {
+    myAccount: "Mijn account",
+    myPhotos: "Mijn foto's",
+    myAnalyses: "Mijn analyses",
+    favorites: "Favorieten",
+    stats: "Statistieken",
+    collections: "Collecties",
+    settings: "Instellingen",
+    newAnalysis: "Nieuwe analyse",
+    recentAnalyses: "Recente analyses",
+    totalAnalyses: "Totaal aantal analyses",
+    averageScore: "Gemiddelde score",
+    bestCategory: "Beste categorie",
+    forImprovement: "Voor verbetering",
+    sortBy: "Sorteren op",
+    sortByDate: "Meest recent",
+    sortByScore: "Hoogste score",
+    editVisibility: "Zichtbaarheid bewerken",
+    doneEditing: "Bewerken voltooid",
+    editProfile: "Profiel bewerken",
+    shareProfile: "Profiel delen",
+    profileShared: "Profiellink gekopieerd",
+    noPhotosYet: "Je hebt nog geen foto's geanalyseerd.",
+    startNewAnalysis: "Nieuwe analyse starten",
+    analyzeFirst: "Analyseer je eerste foto",
+    noFavoritesYet: "Je hebt nog geen favorieten opgeslagen.",
+    browsePhotos: "Foto's bekijken",
+    makePublic: "Openbaar maken",
+    makePrivate: "Privé maken",
+    delete: "Verwijderen",
+    hide: "Verbergen",
+    show: "Tonen",
+    confirmDelete: "Verwijderen bevestigen",
+    confirmDeleteDescription: "Weet je zeker dat je deze analyse wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    confirmHide: "Verbergen bevestigen",
+    confirmHideDescription: "Weet je zeker dat je deze foto wilt verbergen? Hij zal niet in je galerij verschijnen.",
+    confirmShow: "Tonen bevestigen",
+    confirmShowDescription: "Weet je zeker dat je deze foto weer wilt tonen? Hij zal in je galerij verschijnen.",
+    permanentHideWarning: "Deze actie is in feite hetzelfde als verwijderen en kan later niet worden hersteld.",
+    photoHidden: "Foto verborgen",
+    photoHiddenDescription: "Deze foto is nu verborgen in je galerij.",
+    photoVisible: "Foto zichtbaar",
+    photoVisibleDescription: "Deze foto is nu zichtbaar in je galerij.",
+    madePublic: "Analyse openbaar gemaakt",
+    madePrivate: "Analyse privé gemaakt",
+    othersCanView: "Anderen kunnen deze analyse nu bekijken met de gedeelde link.",
+    onlyYouCanView: "Alleen jij kunt deze analyse nu bekijken.",
+    analysisDeleted: "Analyse verwijderd",
+    analysisDeletedSuccess: "De analyse is succesvol verwijderd.",
+    joined: "Lid geworden",
+    untitledPhoto: "Naamloze foto",
+    showDetails: "Details tonen",
+    hideDetails: "Details verbergen",
+    moreItems: "meer items",
+    analysisInProgress: "Analyseverwerking voltooid",
+    checkLatestAnalysis: "Je eerder aangevraagde analyse is verwerkt. Bekijk je nieuwste analyseresultaten.",
+    errors: {
+      loadingFailed: "Foto's laden mislukt",
+      tryRefreshing: "Probeer de pagina te vernieuwen",
+      updateFailed: "Zichtbaarheid bijwerken mislukt",
+      deleteFailed: "Analyse verwijderen mislukt",
+      tryAgain: "Probeer het opnieuw"
+    }
+  },
+  profileEdit: {
+    title: "Profiel bewerken",
+    save: "Opslaan",
+    cancel: "Annuleren",
+    displayName: "Weergavenaam",
+    displayNamePlaceholder: "Voer je weergavenaam in",
+    bio: "Bio",
+    bioPlaceholder: "Voer een korte bio in (max. 50 tekens)",
+    bioCount: "{{current}}/50",
+    socialLinks: "Sociale media",
+    socialLinksDescription: "Voeg sociale medialinks toe om weer te geven op je profiel",
+    linkPlaceholder: "Voer URL in",
+    addCustomLink: "Aangepaste link toevoegen",
+    customLinkLabel: "Linknaam",
+    customLinkLabelPlaceholder: "Voer linknaam in",
+    customLinkUrl: "URL",
+    customLinkUrlPlaceholder: "https://...",
+    addLink: "Toevoegen",
+    profileImage: "Profielfoto",
+    changeImage: "Afbeelding wijzigen",
+    removeImage: "Afbeelding verwijderen",
+    uploadImage: "Afbeelding uploaden",
+    errors: {
+      bioTooLong: "Bio moet 50 tekens of minder zijn",
+      invalidUrl: "Voer een geldige URL in",
+      updateFailed: "Profiel bijwerken mislukt",
+      imageTooLarge: "Afbeeldingsgrootte moet 2MB of minder zijn",
+      invalidImageType: "Alleen JPG-, PNG- en GIF-formaten worden ondersteund"
+    }
+  },
+  profile: {
+    share: "Profiel delen",
+    userProfile: "Gebruikersprofiel",
+    publicPhotos: "Openbare foto's",
+    noPublicPhotos: "Deze gebruiker heeft nog geen foto's gedeeld.",
+    invalidUser: "Ongeldige gebruiker",
+    userNotFound: "Gebruiker niet gevonden",
+    loadFailed: "Profiel laden mislukt",
+    tryAgain: "Probeer het later opnieuw",
+    updateSuccess: "Profiel bijgewerkt",
+    profileUpdated: "Je profiel is succesvol bijgewerkt",
+    updateFailed: "Profiel bijwerken mislukt",
+    enterName: "Voer je naam in"
+  }
+};

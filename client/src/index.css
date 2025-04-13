@@ -1,0 +1,414 @@
+@import url('https://rsms.me/inter/inter.css');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 한글 폰트 제거 */
+
+/* San Francisco 폰트 추가 (이미지 생성용) */
+/** Ultra Light */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 100;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-ultralight-webfont.woff");
+}
+
+/** Thin */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 200;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-thin-webfont.woff");
+}
+
+/** Regular */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 400;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff");
+}
+
+/** Medium */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 500;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-medium-webfont.woff");
+}
+
+/** Semi Bold */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 600;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-semibold-webfont.woff");
+}
+
+/** Bold */ 
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 700;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-bold-webfont.woff");
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    /* Inter 폰트만 적용 (한글 폰트 제거) */
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+    @apply antialiased bg-background text-foreground;
+  }
+  
+  /* InterVariable 폰트 지원 확인 및 적용 (한글 폰트 제거) */
+  @supports (font-variation-settings: normal) {
+    body {
+      font-family: 'InterVariable', system-ui, sans-serif;
+    }
+  }
+}
+
+/* Custom Animations and UI Elements */
+@layer utilities {
+  /* Gradient animation */
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 15s ease infinite;
+  }
+  
+  @keyframes gradient-x {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  /* Slow pulse animation */
+  .animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+  
+  /* Floating element animations */
+  .floating-element {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .floating-element-reverse {
+    animation: float-reverse 7s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+  
+  @keyframes float-reverse {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(20px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+  
+  /* Fade in up animation */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out forwards;
+  }
+  
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Simple fade in animation */
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+  
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  /* Fade in from left animation */
+  .animate-fade-in-left {
+    animation: fade-in-left 0.7s ease-out forwards;
+  }
+  
+  @keyframes fade-in-left {
+    0% {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* Background patterns */
+  .bg-pattern-grid {
+    background-image: 
+      linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  
+  /* Example card hover effect - without floating */
+  .card-float {
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .card-float:hover {
+    box-shadow: 0 8px 15px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Score display style - simplified version */
+  .score-bubble {
+    @apply flex items-center justify-center rounded-xl bg-white/90 text-slate-800 font-bold shadow-md transform transition-transform duration-300 border border-slate-200;
+  }
+  
+  .score-bubble:hover {
+    @apply scale-105;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .hide-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Another hover effect for cards - removed animation */
+  /* This section intentionally left empty to remove duplicate .card-float definition */
+  
+  /* 자동 슬라이딩 애니메이션 - 사용자 요청 수정 */
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(calc(-100% + 100vw));
+    }
+  }
+
+  .marquee-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .marquee-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  .marquee {
+    display: flex;
+    width: max-content;
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+  
+  .marquee.auto-scroll {
+    animation: marquee 60s linear infinite; /* 속도 감소 (30s → 60s) */
+    animation-play-state: running;
+  }
+  
+  .marquee.paused {
+    animation-play-state: paused;
+  }
+
+  /* 카테고리 그래프 수정 */
+  .category-graph circle {
+    fill: transparent !important; 
+    r: 0 !important;
+  }
+  
+  /* Add slow bounce animation for logo */
+  @keyframes bounce-slow {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  .animate-bounce-slow {
+    animation: bounce-slow 4s ease-in-out infinite;
+  }
+  
+  /* 사진 카드 애니메이션 효과 */
+  @keyframes photo-card-reveal {
+    0% {
+      opacity: 0;
+      transform: translateY(40px) scale(0.95);
+      box-shadow: 0 0px 0px rgba(0, 0, 0, 0);
+    }
+    60% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+  }
+  
+  .animate-photo-card-reveal {
+    animation: photo-card-reveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  
+  /* 결과 섹션 요소 순차적 애니메이션 효과 */
+  @keyframes fade-in-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-slide-up {
+    animation: fade-in-slide-up 0.5s ease-out forwards;
+    opacity: 0;
+  }
+  
+  .delay-100 {
+    animation-delay: 0.1s;
+  }
+  
+  .delay-200 {
+    animation-delay: 0.2s;
+  }
+  
+  .delay-300 {
+    animation-delay: 0.3s;
+  }
+  
+  .delay-400 {
+    animation-delay: 0.4s;
+  }
+  
+  .delay-500 {
+    animation-delay: 0.5s;
+  }
+  
+  /* 점수 배지 애니메이션 효과 */
+  @keyframes score-badge-reveal {
+    0% {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+    50% {
+      transform: scale(1.15);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .animate-score-badge {
+    animation: score-badge-reveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.8s;
+    opacity: 0;
+  }
+  
+  /* 애니메이션 그라데이션 버튼 스타일 - 애니메이션 속도 감소 */
+  .animate-gradient-button {
+    background-size: 200% 200%;
+    animation: gradient-animation 5s ease infinite;
+    background-image: linear-gradient(45deg, 
+      #6366f1,
+      #8b5cf6,
+      #d946ef,
+      #a855f7,
+      #6366f1
+    );
+    border-radius: 1rem;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    transition: all 0.3s ease;
+  }
+  
+  .animate-gradient-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  }
+  
+  @keyframes gradient-animation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  /* 움직이는 그라데이션 배경 효과 */
+  .animate-gradient-slow {
+    animation: gradient-slow 15s ease infinite;
+  }
+  
+  @keyframes gradient-slow {
+    0% {
+      transform: translateY(0) translateX(0);
+    }
+    25% {
+      transform: translateY(-5%) translateX(5%);
+    }
+    50% {
+      transform: translateY(-10%) translateX(0);
+    }
+    75% {
+      transform: translateY(-5%) translateX(-5%);
+    }
+    100% {
+      transform: translateY(0) translateX(0);
+    }
+  }
+}

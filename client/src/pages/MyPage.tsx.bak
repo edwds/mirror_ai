@@ -1,0 +1,1552 @@
+import React, { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import Navigation from "@/components/Navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Icons } from "@/components/Icons";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+
+interface AnalysisCard {
+  id: number;
+  photoId: number;
+  displayImagePath: string;
+  createdAt: string;
+  title: string;
+  overallScore: number;
+  isPublic: boolean;
+  isHidden?: boolean;
+  categoryScores: {
+    composition: number;
+    lighting: number;
+    color: number;
+    focus: number;
+    creativity: number;
+  };
+  strengths: string[];
+  improvements: string[];
+  cameraInfo?: string;
+  tags?: string[];
+}
+
+// 분석 카드 컴포넌트 
+interface AnalysisCardProps {
+  card: AnalysisCard;
+  onToggleVisibility: (id: number, isPublic: boolean) => void;
+  onDelete: (id: number) => void;
+  editMode?: boolean;
+  onToggleHidden?: (id: number, isHidden: boolean) => void;
+}
+
+// 스타 평점 계산 헬퍼 함수
+const calculateStarRating = (score: number): { fullStars: number, hasHalfStar: boolean } => {
+  let starRating = 0;
+  
+  if (score >= 95) starRating = 5.0;
+  else if (score >= 90) starRating = 4.5;
+  else if (score >= 85) starRating = 4.0;
+  else if (score >= 80) starRating = 4.0;
+  else if (score >= 75) starRating = 3.5;
+  else if (score >= 70) starRating = 3.5;
+  else if (score >= 65) starRating = 3.0;
+  else if (score >= 60) starRating = 3.0;
+  else if (score >= 55) starRating = 2.5;
+  else if (score >= 50) starRating = 2.5;
+  else if (score >= 45) starRating = 2.0;
+  else if (score >= 40) starRating = 2.0;
+  else if (score >= 35) starRating = 1.5;
+  else if (score >= 30) starRating = 1.5;
+  else if (score >= 20) starRating = 1.0;
+  else if (score >= 10) starRating = 1.0;
+  else starRating = 0.5;
+  
+  return {
+    fullStars: Math.floor(starRating),
+    hasHalfStar: (starRating % 1) !== 0
+  };
+};
+
+const AnalysisCard: React.FC<AnalysisCardProps> = ({ 
+  card, 
+  onToggleVisibility, 
+  onDelete, 
+  editMode = false,
+  onToggleHidden
+}) => {
+  const [, navigate] = useLocation();
+  const { t } = useTranslation();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isHiddenDialogOpen, setIsHiddenDialogOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(card.isHidden || false);
+  
+  // isHidden 상태 업데이트
+  useEffect(() => {
+    setIsHidden(card.isHidden || false);
+  }, [card.isHidden]);
+
+  // 날짜 포맷팅
+  const formattedDate = format(new Date(card.createdAt), "yyyy-MM-dd");
+  
+  // 스타 평점 계산
+  const starsCount = Math.round((card.overallScore / 100) * 5);
+
+  // 분석 결과 페이지로 이동
+  const goToAnalysis = () => {
+    navigate(`/results/${card.id}`);
+  };
+
+  // 숨기기 상태 변경 - 확인 대화상자 없이 바로 실행
+  const handleHideToggle = () => {
+    if (onToggleHidden) {
+      setIsHidden(!isHidden);
+      onToggleHidden(card.photoId, !isHidden);
+    }
+  };
+  
+  return (
+    <div 
+      className={`bg-white rounded-xl overflow-hidden shadow-md h-full flex flex-col 
+        ${!editMode ? 'cursor-pointer group' : 'relative'}`}
+      onClick={!editMode ? goToAnalysis : undefined}
+    >
+      {/* 편집 모드 시 오버레이 */}
+      {editMode && (
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/25">
+          <Button 
+            variant={isHidden ? "secondary" : "destructive"} 
+            onClick={handleHideToggle} // 대화상자 없이 바로 처리
+            className="mx-2"
+          >
+            {isHidden ? (
+              <>
+                <Icons.Eye className="h-4 w-4 mr-2" />
+                {t('myPage.show')}
+              </>
+            ) : (
+              <>
+                <Icons.EyeOff className="h-4 w-4 mr-2" />
+                {t('myPage.hide')}
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+      {/* 이미지 썸네일 (정방형) */}
+      <div className="relative overflow-hidden" style={{ paddingTop: '100%' }}>
+        <img 
+          src={card.displayImagePath} 
+          alt={card.title}
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        />
+        
+        {/* 스코어 배지 */}
+        <div className="absolute top-3 right-3">
+          <div className="bg-white/90 text-slate-900 font-bold rounded-xl shadow-md flex flex-col items-center p-2">
+            <div className="text-2xl font-bold">{card.overallScore}</div>
+            <div className="flex items-center mt-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="relative">
+                  {/* 빈 별 */}
+                  <Icons.Star className="h-3 w-3 text-slate-300" fill="none" />
+                  {/* 채워진 별 (점수 비율에 따라) */}
+                  {i < starsCount && (
+                    <Icons.Star 
+                      className="h-3 w-3 text-amber-500 absolute top-0 left-0" 
+                      fill="currentColor"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* 작업 버튼 (호버 시 나타남) */}
+        <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="bg-white/90 shadow-md w-8 h-8" onClick={(e) => e.stopPropagation()}>
+                <Icons.Edit className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onToggleVisibility(card.id, !card.isPublic);
+              }}>
+                {card.isPublic ? (
+                  <>
+                    <Icons.Lock className="h-4 w-4 mr-2" />
+                    {t('myPage.makePrivate')}
+                  </>
+                ) : (
+                  <>
+                    <Icons.Unlock className="h-4 w-4 mr-2" />
+                    {t('myPage.makePublic')}
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                setIsDeleteDialogOpen(true);
+              }} className="text-red-600">
+                <Icons.Trash2 className="h-4 w-4 mr-2" />
+                {t('myPage.delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* 그라데이션 오버레이 및 타이틀/태그 */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-5">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-white font-bold text-lg line-clamp-2 text-left">{card.title}</h3>
+            
+            {/* 태그 컨테이너 - 한 줄에 모두 표시될 수 있는 경우만 보여줌 */}
+            {card.tags && card.tags.length > 0 && (
+              <div className="whitespace-nowrap overflow-hidden max-w-full">
+                <div className="flex flex-nowrap gap-1.5 mt-1">
+                  {card.tags.slice(0, 3).map((tag, index) => (
+                    <span key={index} className="px-2 py-0.5 bg-white/10 backdrop-blur-sm rounded-full text-xs text-white/90 inline-block">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* 카드 내용 */}
+      <div className="p-5 bg-white border-t border-slate-100 flex-grow flex flex-col">
+        <div className="flex-grow">
+          {/* 장점 */}
+          {card.strengths && card.strengths[0] && (
+            <div className="flex items-center mb-3">
+              <div className="flex-shrink-0 mr-2.5 rounded-full bg-green-50 p-1 border border-green-100">
+                <Icons.Star className="h-3.5 w-3.5 text-green-500" />
+              </div>
+              <p className="text-sm text-slate-700 text-left">{card.strengths[0]}</p>
+            </div>
+          )}
+          
+          {/* 개선점 */}
+          {card.improvements && card.improvements[0] && (
+            <div className="flex items-center mb-3">
+              <div className="flex-shrink-0 mr-2.5 rounded-full bg-blue-50 p-1 border border-blue-100">
+                <Icons.Sparkles className="h-3.5 w-3.5 text-blue-500" />
+              </div>
+              <p className="text-sm text-slate-700 text-left">{card.improvements[0]}</p>
+            </div>
+          )}
+        </div>
+        
+        {/* 카메라 정보 - 항상 카드 하단에 위치 */}
+        {card.cameraInfo && (
+          <div className="flex items-center mt-auto pt-2 border-t border-slate-100">
+            <div className="flex-shrink-0 mr-2.5 rounded-full bg-slate-50 p-1 border border-slate-100">
+              <Icons.Camera className="h-3.5 w-3.5 text-slate-500" />
+            </div>
+            <p className="text-xs text-slate-500 text-left">{card.cameraInfo}</p>
+          </div>
+        )}
+      </div>
+      
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('myPage.confirmDelete')}</DialogTitle>
+            <DialogDescription>
+              {t('myPage.confirmDeleteDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex space-x-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="destructive" onClick={() => {
+              onDelete(card.id);
+              setIsDeleteDialogOpen(false);
+            }}>
+              {t('common.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* 숨기기/보이기 확인 다이얼로그 */}
+      <Dialog open={isHiddenDialogOpen} onOpenChange={setIsHiddenDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {isHidden ? t('myPage.confirmShow') : t('myPage.confirmHide')}
+            </DialogTitle>
+            <DialogDescription className="space-y-2">
+              <p>
+                {isHidden 
+                  ? t('myPage.confirmShowDescription') 
+                  : t('myPage.confirmHideDescription')
+                }
+              </p>
+              {!isHidden && (
+                <p className="text-amber-500 font-medium mt-2">
+                  {t('myPage.permanentHideWarning', '숨겨진 사진은 편집 모드에서 다시 표시할 수 있습니다.')}
+                </p>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex space-x-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setIsHiddenDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant={isHidden ? "default" : "destructive"} onClick={handleHideToggle}>
+              {isHidden ? t('myPage.show') : t('myPage.hide')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// 소셜 링크 다이얼로그 컴포넌트
+const SocialLinksDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialLinks: { [key: string]: string };
+  onSave: (links: { [key: string]: string }) => void;
+}> = ({ open, onOpenChange, initialLinks, onSave }) => {
+  const { t } = useTranslation();
+  const [links, setLinks] = useState<{ [key: string]: string }>(initialLinks);
+  
+  // 다이얼로그가 열릴 때마다 초기 링크값으로 설정
+  useEffect(() => {
+    if (open) {
+      setLinks(initialLinks);
+    }
+  }, [open, initialLinks]);
+  
+  // 링크 값 변경 핸들러
+  const handleLinkChange = (platform: string, value: string) => {
+    setLinks(prev => ({
+      ...prev,
+      [platform]: value
+    }));
+  };
+  
+  // 저장 핸들러
+  const handleSave = () => {
+    // 빈 값을 가진 링크는 삭제
+    const cleanedLinks = { ...links };
+    Object.keys(cleanedLinks).forEach(key => {
+      if (!cleanedLinks[key]) {
+        delete cleanedLinks[key];
+      }
+    });
+    
+    onSave(cleanedLinks);
+    onOpenChange(false);
+  };
+  
+  // 플랫폼 목록
+  const platforms = [
+    { key: 'instagram', label: 'Instagram', placeholder: 'username' },
+    { key: 'thread', label: 'Threads', placeholder: 'username' },
+    { key: 'x', label: 'X (Twitter)', placeholder: 'username' },
+    { key: 'youtube', label: 'YouTube', placeholder: 'channel-id' },
+    { key: 'tiktok', label: 'TikTok', placeholder: 'username' },
+    { key: 'naverBlog', label: 'Naver Blog', placeholder: 'blog-id' }
+  ];
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('profile.socialLinks')}</DialogTitle>
+          <DialogDescription>
+            {t('profile.socialLinksDescription')}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid gap-4 py-4">
+          {platforms.map(platform => (
+            <div key={platform.key} className="grid grid-cols-5 items-center gap-4">
+              <Label htmlFor={platform.key} className="text-right col-span-1">
+                {platform.label}
+              </Label>
+              <div className="col-span-4 flex items-center">
+                {/* 아이콘 표시 */}
+                {(Icons as any)[platform.key === 'x' ? 'X' : 
+                  platform.key === 'naverBlog' ? 'NaverBlog' : 
+                  platform.key.charAt(0).toUpperCase() + platform.key.slice(1)] && (
+                  <div className="mr-2">
+                    {React.createElement(
+                      (Icons as any)[platform.key === 'x' ? 'X' : 
+                        platform.key === 'naverBlog' ? 'NaverBlog' : 
+                        platform.key.charAt(0).toUpperCase() + platform.key.slice(1)],
+                      { className: "h-4 w-4" }
+                    )}
+                  </div>
+                )}
+                <Input
+                  id={platform.key}
+                  value={links[platform.key] || ''}
+                  onChange={(e) => handleLinkChange(platform.key, e.target.value)}
+                  placeholder={platform.placeholder}
+                  className="col-span-4"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button onClick={handleSave}>
+            {t('common.save')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const ProfileImageUpdateDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (imageBase64: string) => void;
+}> = ({ open, onOpenChange, onSave }) => {
+  const { t } = useTranslation();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // 이미지 파일 확인
+    if (!file.type.match('image.*')) {
+      alert(t('upload.errors.mustBeImage'));
+      return;
+    }
+    
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert(t('upload.errors.fileTooLarge'));
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setImagePreview(result);
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const handleSave = async () => {
+    if (!imagePreview) return;
+    setIsUploading(true);
+    
+    try {
+      // 이미지 리사이징 및 크롭 (512x512)
+      const img = new Image();
+      img.src = imagePreview;
+      await new Promise<void>(resolve => { img.onload = () => resolve(); });
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // 정사각형으로 크롭할 영역 계산
+      const size = Math.min(img.width, img.height);
+      const x = (img.width - size) / 2;
+      const y = (img.height - size) / 2;
+      
+      // 캔버스 크기 설정 (512x512)
+      canvas.width = 512;
+      canvas.height = 512;
+      
+      // 이미지 그리기 (리사이징 + 크롭)
+      ctx?.drawImage(img, x, y, size, size, 0, 0, 512, 512);
+      
+      // 결과 이미지 데이터 가져오기
+      const resizedImage = canvas.toDataURL('image/jpeg', 0.9);
+      
+      // 콜백 함수 호출
+      onSave(resizedImage);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('프로필 이미지 처리 오류:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('profile.updateProfileImage')}</DialogTitle>
+          <DialogDescription>
+            {t('profile.selectProfileImage')}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6 py-4">
+          {/* 이미지 프리뷰 */}
+          <div 
+            className="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer"
+            onClick={triggerFileInput}
+          >
+            {imagePreview ? (
+              <img src={imagePreview} alt="Profile preview" className="w-full h-full object-cover" />
+            ) : (
+              <div className="text-center p-4">
+                <Icons.User className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                <p className="text-xs text-slate-500">{t('profile.clickToSelect')}</p>
+              </div>
+            )}
+          </div>
+          
+          {/* 숨겨진 파일 입력 */}
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/jpeg,image/png,image/gif"
+            className="hidden"
+          />
+          
+          {/* 업로드 버튼 */}
+          <div className="text-center">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={triggerFileInput}
+              className="mx-auto"
+            >
+              {t('profile.selectImage')}
+            </Button>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={!imagePreview || isUploading}
+            className="ml-2"
+          >
+            {isUploading ? t('upload.uploading') : t('profile.saveImage')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// 프로필 박스 컴포넌트 - 모바일 우선 반응형으로 재디자인
+const ProfileBox: React.FC = () => {
+  const { user, logout, updateUser } = useAuth();
+  const { t } = useTranslation();
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
+  const [isProfileImageDialogOpen, setIsProfileImageDialogOpen] = useState(false);
+  const [isSocialLinksDialogOpen, setIsSocialLinksDialogOpen] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<{ [key: string]: string }>({});
+  
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName || '');
+      setBio(user.bio || '');
+    }
+  }, [user]);
+  
+  if (!user) return null;
+  
+  const profileCreatedDate = user.createdAt ? 
+    format(new Date(user.createdAt), "yyyy-MM-dd") : 
+    format(new Date(), "yyyy-MM-dd");
+  
+  // 이름 저장
+  const saveName = async () => {
+    if (!displayName.trim()) return;
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ displayName }),
+      });
+      
+      if (response.ok) {
+        setIsEditingName(false);
+        updateUser({ ...user, displayName });
+        toast({
+          title: t('profile.updateSuccess'),
+          description: t('profile.profileUpdated'),
+        });
+      } else {
+        throw new Error('Failed to update name');
+      }
+    } catch (error) {
+      console.error('이름 업데이트 실패:', error);
+      toast({
+        title: t('profile.updateFailed'),
+        description: t('myPage.errors.tryAgain'),
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // 자기소개 저장
+  const saveBio = async () => {
+    try {
+      const response = await fetch(`/api/user/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bio }),
+      });
+      
+      if (response.ok) {
+        setIsEditingBio(false);
+        updateUser({ ...user, bio });
+        toast({
+          title: t('profile.updateSuccess'),
+          description: t('profile.profileUpdated'),
+        });
+      } else {
+        throw new Error('Failed to update bio');
+      }
+    } catch (error) {
+      console.error('자기소개 업데이트 실패:', error);
+      toast({
+        title: t('profile.updateFailed'),
+        description: t('myPage.errors.tryAgain'),
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // 프로필 이미지 저장
+  const saveProfileImage = async (imageBase64: string) => {
+    try {
+      const response = await fetch(`/api/user/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profilePicture: imageBase64 }),
+      });
+      
+      if (response.ok) {
+        updateUser({ ...user, profilePicture: imageBase64 });
+        toast({
+          title: t('profile.updateSuccess'),
+          description: t('profile.profileImageUpdated'),
+        });
+      } else {
+        throw new Error('Failed to update profile image');
+      }
+    } catch (error) {
+      console.error('프로필 이미지 업데이트 실패:', error);
+      toast({
+        title: t('profile.updateFailed'),
+        description: t('myPage.errors.tryAgain'),
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // 자기소개에서 URL 감지하여 링크로 변환
+  const formatBioWithLinks = (text: string) => {
+    if (!text) return '';
+    
+    // URL 패턴 정규식
+    const urlPattern = /(https?:\/\/[^\s]+)/g;
+    
+    // 텍스트에서 URL 찾아서 <a> 태그로 변환
+    const parts = text.split(urlPattern);
+    const matches = text.match(urlPattern) || [];
+    
+    if (matches.length === 0) {
+      // URL이 없으면 줄바꿈만 처리
+      return text.split('\n').map((line, i) => (
+        <React.Fragment key={i}>
+          {line}
+          {i < text.split('\n').length - 1 && <br />}
+        </React.Fragment>
+      ));
+    }
+    
+    // URL이 있으면 URL 변환 및 줄바꿈 처리
+    return parts.map((part, i) => {
+      // 짝수 인덱스는 일반 텍스트, 홀수 인덱스는 URL
+      if (i % 2 === 0) {
+        return part.split('\n').map((line, j) => (
+          <React.Fragment key={`${i}-${j}`}>
+            {line}
+            {j < part.split('\n').length - 1 && <br />}
+          </React.Fragment>
+        ));
+      } else {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            {part}
+          </a>
+        );
+      }
+    });
+  };
+  
+  // 소셜 미디어 링크 정보 준비
+  useEffect(() => {
+    if (user && user.socialLinks) {
+      try {
+        // 문자열로 저장되어 있을 경우 JSON으로 파싱
+        const links = typeof user.socialLinks === 'string' 
+          ? JSON.parse(user.socialLinks) 
+          : user.socialLinks;
+        setSocialLinks(links || {});
+      } catch (error) {
+        console.error('소셜 링크 파싱 오류:', error);
+        setSocialLinks({});
+      }
+    }
+  }, [user]);
+
+  // 소셜 미디어 아이콘 렌더링 함수
+  const renderSocialIcons = () => {
+    if (!socialLinks || Object.keys(socialLinks).length === 0) {
+      return null;
+    }
+
+    // 아이콘 컴포넌트 매핑
+    const iconMapping: { [key: string]: any } = {
+      instagram: { component: Icons.Instagram, color: 'text-pink-600' },
+      thread: { component: Icons.Thread, color: 'text-slate-800' },
+      x: { component: Icons.X, color: 'text-slate-800' },
+      youtube: { component: Icons.YouTube, color: 'text-red-600' },
+      tiktok: { component: Icons.TikTok, color: 'text-slate-800' },
+      naverBlog: { component: Icons.NaverBlog, color: 'text-green-600' },
+    };
+
+    // URL 확인 및 수정 함수
+    const validateUrl = (url: string, platform: string): string => {
+      if (!url) return '';
+      
+      // URL이 이미 http나 https로 시작하면 유효한 URL로 간주
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      
+      // 아니면 플랫폼에 따라 적절한 URL 생성
+      switch(platform.toLowerCase()) {
+        case 'instagram':
+          return `https://www.instagram.com/${url}`;
+        case 'thread':
+          return `https://www.threads.net/@${url}`;
+        case 'x':
+          return `https://twitter.com/${url}`;
+        case 'youtube':
+          return `https://www.youtube.com/channel/${url}`;
+        case 'tiktok':
+          return `https://www.tiktok.com/@${url}`;
+        case 'naverblog':
+          return `https://blog.naver.com/${url}`;
+        default:
+          // 기본적으로 http를 붙여줌
+          return url.includes('://') ? url : `https://${url}`;
+      }
+    };
+
+    return (
+      <div className="flex flex-wrap gap-3 mt-2">
+        {Object.entries(socialLinks).map(([key, url]) => {
+          if (!url) return null;
+          
+          const IconInfo = iconMapping[key.toLowerCase()] || { component: Icons.Globe, color: 'text-slate-500' };
+          const IconComponent = IconInfo.component;
+          
+          // URL 검증 및 적절한 형식으로 변환
+          const validUrl = validateUrl(url as string, key);
+          
+          return (
+            <a 
+              key={key} 
+              href={validUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className={`${IconInfo.color} hover:opacity-80 transition-opacity`}
+              title={key}
+            >
+              <IconComponent className="h-5 w-5" />
+            </a>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      {/* 간결한 프로필 정보 */}
+      <div className="p-4">
+        <div className="flex flex-col w-full">
+          {/* 닉네임 */}
+          {isEditingName ? (
+            <div className="flex items-center gap-2 w-full">
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="border border-slate-300 rounded px-2 py-1 text-lg w-full"
+                placeholder={t('profile.enterName')}
+                maxLength={30}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') saveName();
+                  if (e.key === 'Escape') setIsEditingName(false);
+                }}
+              />
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => setIsEditingName(false)}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={saveName}
+                >
+                  {t('common.save')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-slate-900">
+                {user.displayName || t('common.user')}
+              </h2>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="p-1 h-7 w-7 text-slate-600 hover:text-slate-900 hover:bg-transparent" 
+                onClick={() => navigate('/profile/edit')}
+              >
+                <Icons.Edit className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+          
+          {/* 자기소개 - 최대 50자 제한된 심플한 텍스트 */}
+          <div className="group w-full mt-2">
+            {isEditingBio ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="border border-slate-300 rounded px-3 py-2 text-sm w-full"
+                  placeholder={t('profile.enterBio')}
+                  maxLength={50}
+                  autoFocus
+                />
+                <div className="flex justify-end items-center gap-2">
+                  <span className="text-xs text-slate-500">{bio.length}/50</span>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setIsEditingBio(false)}
+                    className="ml-auto"
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={saveBio}
+                  >
+                    {t('common.save')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                <p className="text-sm text-slate-600 line-clamp-2">
+                  {bio ? (
+                    formatBioWithLinks(bio)
+                  ) : (
+                    <span className="text-slate-400 italic">{t('profile.addBio')}</span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {/* 소셜 미디어 링크 */}
+          {renderSocialIcons()}
+          
+          {!renderSocialIcons() && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-500 flex items-center gap-1 mt-2"
+              onClick={() => setIsSocialLinksDialogOpen(true)}
+            >
+              <Icons.Plus className="h-4 w-4" />
+              {t('profile.addSocialLinks')}
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {/* 작업 버튼 */}
+      <div className="flex items-center justify-end p-3 border-t border-slate-100 bg-slate-50 gap-2">
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          onClick={() => {
+            const profileUrl = `${window.location.origin}/profile/${user.id}`;
+            
+            // 웹 공유 API 사용 시도 (지원하는 브라우저에서만 작동)
+            if (navigator.share) {
+              navigator.share({
+                title: user.displayName || 'Mirror 프로필',
+                url: profileUrl
+              }).catch(err => {
+                // 공유 취소 또는 오류 시 클립보드에 복사
+                navigator.clipboard.writeText(profileUrl);
+                toast({
+                  title: t('profile.linkCopied'),
+                  description: t('profile.profileLinkCopiedToClipboard')
+                });
+              });
+            } else {
+              // 공유 API를 지원하지 않는 경우 클립보드에 복사
+              navigator.clipboard.writeText(profileUrl);
+              toast({
+                title: t('profile.linkCopied'),
+                description: t('profile.profileLinkCopiedToClipboard')
+              });
+            }
+          }} 
+          className="w-9 h-9"
+          title={t('profile.share')}
+        >
+          <Icons.Share className="h-4 w-4" />
+        </Button>
+        
+        <Button 
+          variant="default" 
+          size="icon" 
+          onClick={() => navigate(`/profile/edit`)} 
+          className="w-9 h-9"
+          title={t('profile.edit')}
+        >
+          <Icons.Edit className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      {/* 프로필 이미지 수정 다이얼로그 */}
+      <ProfileImageUpdateDialog 
+        open={isProfileImageDialogOpen}
+        onOpenChange={setIsProfileImageDialogOpen}
+        onSave={saveProfileImage}
+      />
+    </div>
+  );
+};
+
+// 빈 상태 메시지 컴포넌트 
+const EmptyState: React.FC<{ message: string; buttonText: string; action: () => void }> = ({ 
+  message, 
+  buttonText, 
+  action 
+}) => {
+  return (
+    <div className="text-center py-16 px-4">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+        <Icons.Image className="h-8 w-8 text-slate-400" />
+      </div>
+      <p className="text-slate-600 mb-4 max-w-md mx-auto">{message}</p>
+      <Button onClick={action}>
+        <Icons.Plus className="h-4 w-4 mr-2" />
+        {buttonText}
+      </Button>
+    </div>
+  );
+};
+
+// 카메라 정보 포맷 함수 - 제조사와 모델명 포맷
+const formatCameraInfo = (exifData: any): string => {
+  console.log('포맷할 EXIF 데이터:', exifData);
+  
+  // 직접 cameraMake와 cameraModel 필드를 사용
+  if (exifData?.cameraMake && exifData?.cameraModel) {
+    console.log('별도 필드 사용:', { make: exifData.cameraMake, model: exifData.cameraModel });
+    return `${exifData.cameraMake} | ${exifData.cameraModel}`;
+  } 
+  
+  // 예전 방식의 cameraInfo 필드 지원 (이전 데이터 호환성)
+  if (exifData?.cameraInfo) {
+    console.log('통합 cameraInfo 필드 사용:', exifData.cameraInfo);
+    const parts = exifData.cameraInfo.split(' | ');
+    if (parts.length >= 2) {
+      // 제조사와 모델명만 포함 (첫 번째 및 두 번째 파트까지만)
+      return `${parts[0]} | ${parts[1]}`;
+    }
+    return exifData.cameraInfo;
+  }
+  
+  console.log('카메라 정보 없음');
+  return '정보 없음';
+};
+
+// 메인 컴포넌트
+const MyPage: React.FC = () => {
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState("photos");
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [analysisCards, setAnalysisCards] = useState<AnalysisCard[]>([]);
+  // 프로필 상태 변수들은 위에 이미 선언되어 있음
+  
+  // 분석 결과 가져오기
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchUserPhotos = async () => {
+        try {
+          // 새 API 엔드포인트 사용: 사진과 분석 데이터를 한 번에 가져오기 (숨겨진 사진 포함)
+          const response = await fetch('/api/photos/with-analyses?includeHidden=true');
+          const data = await response.json();
+
+          if (data.success && data.photos && data.photos.length > 0) {
+            console.log('받은 사진 데이터:', data.photos.length, '개');
+            // 첫 번째 사진의 데이터 구조 로깅 (디버깅 용)
+            if (data.photos[0]) {
+              console.log('첫 번째 사진 데이터 구조:', JSON.stringify(data.photos[0], null, 2));
+              console.log('장점:', data.photos[0].strengths);
+              console.log('개선점:', data.photos[0].improvements);
+            }
+            
+            // 필요한 형식으로 변환
+            const formattedCards = data.photos.map((photo: any) => {
+              return {
+                id: photo.id,
+                photoId: photo.photoId,
+                displayImagePath: photo.displayImagePath,
+                createdAt: photo.createdAt || new Date().toISOString(),
+                title: photo.title || t('myPage.untitledPhoto'),
+                overallScore: photo.overallScore || 0,
+                isPublic: photo.isPublic || false,
+                isHidden: photo.isHidden || false,
+                categoryScores: photo.categoryScores || {
+                  composition: 0,
+                  lighting: 0,
+                  color: 0,
+                  focus: 0,
+                  creativity: 0
+                },
+                strengths: photo.strengths || [],
+                improvements: photo.improvements || [],
+                tags: photo.tags || [],
+                cameraInfo: photo.cameraInfo || t('results.noExifData')
+              };
+            });
+            
+            setAnalysisCards(formattedCards);
+          }
+          
+          setIsLoaded(true);
+        } catch (error) {
+          console.error('사진 및 분석 데이터 가져오기 실패:', error);
+          toast({
+            title: t('myPage.errors.loadingFailed'),
+            description: t('myPage.errors.tryRefreshing'),
+            variant: 'destructive',
+          });
+          setIsLoaded(true);
+        }
+      };
+      
+      fetchUserPhotos();
+    }
+  }, [isAuthenticated, t, toast]);
+  
+  // 비로그인 상태면 홈으로 리디렉션
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/");
+      toast({
+        title: t('common.loginRequired'),
+        description: t('common.pleaseLoginToView'),
+        variant: "destructive",
+      });
+    }
+  }, [isLoading, isAuthenticated, navigate, toast, t]);
+  
+  // 분석 공개/비공개 전환
+  const handleToggleVisibility = async (id: number, isPublic: boolean) => {
+    try {
+      // API 호출 (참고: API가 이 기능을 지원하지 않으면 아래 코드 수정 필요)
+      const response = await fetch(`/api/analyses/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isPublic }),
+      });
+      
+      if (response.ok) {
+        // 상태 업데이트
+        setAnalysisCards(cards => 
+          cards.map(card => 
+            card.id === id ? { ...card, isPublic } : card
+          )
+        );
+        
+        toast({
+          title: isPublic ? t('myPage.madePublic') : t('myPage.madePrivate'),
+          description: isPublic ? t('myPage.othersCanView') : t('myPage.onlyYouCanView'),
+        });
+      } else {
+        throw new Error('API 요청 실패');
+      }
+    } catch (error) {
+      console.error('공개 상태 변경 실패:', error);
+      toast({
+        title: t('myPage.errors.updateFailed'),
+        description: t('myPage.errors.tryAgain'),
+        variant: 'destructive',
+      });
+      
+      // 현재 UI에 에러 표시 없이 상태만 업데이트 (API 구현 전까지)
+      setAnalysisCards(cards => 
+        cards.map(card => 
+          card.id === id ? { ...card, isPublic } : card
+        )
+      );
+    }
+  };
+  
+  // 분석 삭제
+  const handleDelete = async (id: number) => {
+    try {
+      // API 호출 (참고: API가 이 기능을 지원하지 않으면 아래 코드 수정 필요)
+      const response = await fetch(`/api/analyses/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // 상태 업데이트
+        setAnalysisCards(cards => cards.filter(card => card.id !== id));
+        
+        toast({
+          title: t('myPage.analysisDeleted'),
+          description: t('myPage.analysisDeletedSuccess'),
+        });
+      } else {
+        throw new Error('API 요청 실패');
+      }
+    } catch (error) {
+      console.error('분석 삭제 실패:', error);
+      toast({
+        title: t('myPage.errors.deleteFailed'),
+        description: t('myPage.errors.tryAgain'),
+        variant: 'destructive',
+      });
+      
+      // 현재 UI에 에러 표시 없이 상태만 업데이트 (API 구현 전까지)
+      setAnalysisCards(cards => cards.filter(card => card.id !== id));
+    }
+  };
+  
+  // 사진 숨기기/표시 전환
+  const handleToggleHidden = async (photoId: number, isHidden: boolean) => {
+    try {
+      // API 호출 (참고: API가 이 기능을 지원하도록 수정 필요)
+      const response = await fetch(`/api/photos/${photoId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isHidden }),
+      });
+      
+      if (response.ok) {
+        // 상태 업데이트
+        setAnalysisCards(cards => 
+          cards.map(card => 
+            card.photoId === photoId ? { ...card, isHidden } : card
+          )
+        );
+        
+        toast({
+          title: isHidden ? t('myPage.photoHidden') : t('myPage.photoVisible'),
+          description: isHidden ? t('myPage.photoHiddenDescription') : t('myPage.photoVisibleDescription'),
+        });
+      } else {
+        throw new Error('API 요청 실패');
+      }
+    } catch (error) {
+      console.error('사진 가시성 변경 실패:', error);
+      toast({
+        title: t('myPage.errors.updateFailed'),
+        description: t('myPage.errors.tryAgain'),
+        variant: 'destructive',
+      });
+      
+      // 현재 UI에 에러 표시 없이 상태만 업데이트 (API 구현 전까지)
+      setAnalysisCards(cards => 
+        cards.map(card => 
+          card.photoId === photoId ? { ...card, isHidden } : card
+        )
+      );
+    }
+  };
+  
+  // 새 분석 시작
+  const startNewAnalysis = () => {
+    navigate("/upload");
+  };
+  
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+      </div>
+    );
+  }
+  
+  // userBio 변수는 위에서 이미 선언되어 있음
+
+  // 프로필 이미지 저장 함수
+  const saveProfileImage = async (imageBase64: string) => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profilePicture: imageBase64
+        }),
+      });
+      
+      if (response.ok) {
+        const updatedUser = await response.json();
+        // 사용자 정보 업데이트 처리 (AuthContext에서 자동으로 처리됨)
+        toast({
+          title: t('profile.updateSuccess'),
+          description: t('profile.profileUpdated'),
+        });
+      } else {
+        throw new Error('프로필 이미지 업데이트 실패');
+      }
+    } catch (error) {
+      console.error('프로필 이미지 저장 오류:', error);
+      toast({
+        title: t('profile.updateFailed'),
+        description: t('profile.tryAgain'),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Navigation />
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+        {/* 새 프로필 디자인 - 홈페이지와 일치하는 스타일 */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 mb-8">
+          {/* 프로필 헤더 */}
+          <div className="relative">
+            {/* 커버 이미지 */}
+            <div className="h-40 md:h-56 w-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            
+            {/* 프로필 정보 오버레이 */}
+            <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 px-6 md:px-8 flex justify-between items-end">
+              {/* 프로필 사진 & 정보 */}
+              <div className="flex items-end">
+                <div 
+                  className="h-24 w-24 md:h-32 md:w-32 rounded-full border-4 border-white bg-white overflow-hidden flex-shrink-0 cursor-pointer"
+                  onClick={() => setIsProfileImageDialogOpen(true)}
+                >
+                  {user?.profilePicture ? (
+                    <img 
+                      src={user.profilePicture} 
+                      alt={user.displayName || "User profile"} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-slate-100">
+                      <Icons.User className="h-12 w-12 text-slate-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="ml-4 mb-2 hidden md:block">
+                  <h3 className="text-2xl font-bold text-slate-900">
+                    {user?.displayName || t('profile.anonymous')}
+                  </h3>
+                  <p className="text-slate-500">
+                    {userBio || t('profile.photographer')}
+                  </p>
+                </div>
+              </div>
+              
+              {/* 편집 버튼 */}
+              <div className="mb-2 hidden md:block">
+                <Button 
+                  onClick={() => navigate(`/profile/edit`)}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Icons.Edit className="w-4 h-4 mr-2" />
+                  {t('profile.edit')}
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          {/* 모바일 프로필 정보 */}
+          <div className="mt-14 px-6 mb-4 md:hidden">
+            <h3 className="text-xl font-bold text-slate-900">
+              {user?.displayName || t('profile.anonymous')}
+            </h3>
+            <p className="text-slate-500 text-sm">
+              {userBio || t('profile.photographer')}
+            </p>
+          </div>
+          
+          {/* 프로필 제목 - 탭 네비게이션 대신 단일 제목 */}
+          <div className="px-6 md:px-8 pt-10 md:pt-20 pb-4 border-b border-slate-200">
+            <h2 className="text-2xl font-bold text-slate-900">
+              {t('myPage.myAnalyses')}
+            </h2>
+          </div>
+
+          {/* 분석 통계 요약 */}
+          <div className="p-6 md:p-8">
+            {/* 통계 카드 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <p className="text-sm text-slate-600 mb-1">{t('myPage.totalAnalyses')}</p>
+                <p className="text-2xl md:text-3xl font-bold text-slate-900">
+                  {analysisCards.length}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <p className="text-sm text-slate-600 mb-1">{t('myPage.averageScore')}</p>
+                <p className="text-2xl md:text-3xl font-bold text-slate-900">
+                  {analysisCards.length > 0 
+                    ? (analysisCards.reduce((sum, card) => sum + card.overallScore, 0) / analysisCards.length).toFixed(1)
+                    : "0.0"}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <p className="text-sm text-slate-600 mb-1">{t('myPage.bestCategory')}</p>
+                <p className="text-2xl md:text-3xl font-bold text-slate-900">
+                  {analysisCards.length > 0 
+                    ? Object.entries(
+                        analysisCards.reduce((acc, card) => {
+                          Object.entries(card.categoryScores).forEach(([key, value]) => {
+                            if (!acc[key]) acc[key] = 0;
+                            acc[key] += value;
+                          });
+                          return acc;
+                        }, {} as Record<string, number>)
+                      ).sort((a, b) => b[1] - a[1])[0]?.[0] || "-"
+                    : "-"}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <p className="text-sm text-slate-600 mb-1">{t('myPage.forImprovement')}</p>
+                <p className="text-2xl md:text-3xl font-bold text-slate-900">
+                  {analysisCards.length > 0 
+                    ? Object.entries(
+                        analysisCards.reduce((acc, card) => {
+                          Object.entries(card.categoryScores).forEach(([key, value]) => {
+                            if (!acc[key]) acc[key] = 0;
+                            acc[key] += value;
+                          });
+                          return acc;
+                        }, {} as Record<string, number>)
+                      ).sort((a, b) => a[1] - b[1])[0]?.[0] || "-"
+                    : "-"}
+                </p>
+              </div>
+            </div>
+            
+            {/* 최근 분석 헤더 */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-slate-900">
+                  {t('myPage.recentAnalyses')}
+                </h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className={isEditMode ? "bg-slate-100" : ""}
+                >
+                  {isEditMode ? (
+                    <Icons.Check className="h-3.5 w-3.5 mr-1.5" />
+                  ) : (
+                    <Icons.Eye className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  {isEditMode ? t('myPage.doneEditing') : t('myPage.editVisibility')}
+                </Button>
+              </div>
+              
+              <Button 
+                onClick={startNewAnalysis} 
+                variant="outline" 
+                className="text-primary border-primary hover:bg-primary/10"
+              >
+                <Icons.Plus className="h-4 w-4 mr-2" />
+                {t('myPage.newAnalysis')}
+              </Button>
+            </div>
+
+            {/* 분석 그리드 */}
+            {isLoaded && analysisCards.length === 0 ? (
+              <EmptyState 
+                message={t('myPage.noPhotosYet')}
+                buttonText={t('myPage.analyzeFirst')}
+                action={startNewAnalysis}
+              />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {analysisCards
+                  // 편집 모드일 때는 모든 사진 표시, 아닐 때는 숨겨지지 않은 사진만 표시
+                  .filter(card => isEditMode || !card.isHidden)
+                  .map(card => (
+                    <AnalysisCard 
+                      key={card.id} 
+                      card={card} 
+                      onToggleVisibility={handleToggleVisibility}
+                      onDelete={handleDelete}
+                      editMode={isEditMode}
+                      onToggleHidden={handleToggleHidden}
+                    />
+                  ))
+                }
+              </div>
+            )}
+            
+            {/* 모바일 화면에서만 표시되는 플로팅 버튼 - 하단 위치 & 그라데이션 적용 */}
+            <div className="fixed bottom-8 right-8 z-50 md:hidden">
+              <Button 
+                onClick={startNewAnalysis} 
+                size="lg" 
+                className="rounded-full h-12 w-12 p-0 shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 border-0 text-white"
+              >
+                <Icons.Plus className="h-6 w-6" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* 프로필 이미지 수정 다이얼로그 */}
+          <ProfileImageUpdateDialog 
+            open={isProfileImageDialogOpen}
+            onOpenChange={setIsProfileImageDialogOpen}
+            onSave={saveProfileImage}
+          />
+          
+          {/* 소셜 미디어 링크 수정 다이얼로그 */}
+          <SocialLinksDialog
+            open={isSocialLinksDialogOpen}
+            onOpenChange={setIsSocialLinksDialogOpen}
+            initialLinks={socialLinks}
+            onSave={async (links) => {
+              if (!user) return;
+              
+              try {
+                const response = await fetch(`/api/user/${user.id}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    socialLinks: JSON.stringify(links)
+                  }),
+                });
+                
+                if (response.ok) {
+                  setSocialLinks(links);
+                  toast({
+                    title: t('profile.updateSuccess'),
+                    description: t('profile.socialLinksUpdated'),
+                  });
+                } else {
+                  throw new Error('Failed to update social links');
+                }
+              } catch (error) {
+                console.error('소셜 링크 업데이트 실패:', error);
+                toast({
+                  title: t('profile.updateFailed'),
+                  description: t('myPage.errors.tryAgain'),
+                  variant: 'destructive',
+                });
+              }
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MyPage;
