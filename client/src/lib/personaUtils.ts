@@ -37,7 +37,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Viktor",
     emoji: "🪓",
     color: "bg-gradient-to-r from-red-700 to-gray-800",
-    imagePath: "/images/viktor.png",
+    imagePath: "/images/viktor-removebg.webp",
     description: {
       en: "Harsh, unforgiving evaluation with technical precision",
       ko: "냉정하고 기술적으로 정확한 평가",
@@ -53,7 +53,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Noel",
     emoji: "🎬",
     color: "bg-gradient-to-r from-purple-700 via-indigo-600 to-slate-500",
-    imagePath: "/images/noel.png",
+    imagePath: "/images/noel-removebg.webp",
     description: {
       en: "Cinematic assessment with references to film techniques",
       ko: "영화적 기법을 참조한 평가",
@@ -69,7 +69,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Sunny",
     emoji: "🫂",
     color: "bg-gradient-to-br from-yellow-300 to-pink-400",
-    imagePath: "/images/sunny.png",
+    imagePath: "/images/sunny-removebg.webp",
     description: {
       en: "Encouraging feedback with gentle suggestions",
       ko: "따뜻한 응원과 부드러운 조언",
@@ -85,7 +85,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Eva",
     emoji: "📸✨",
     color: "bg-gradient-to-tr from-amber-400 to-pink-500",
-    imagePath: "/images/eva.png",
+    imagePath: "/images/eva-removebg.webp",
     description: {
       en: "Social media focused evaluation for maximum engagement",
       ko: "소셜 미디어 감성의 인스타그램 스타일 평가",
@@ -101,7 +101,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Momo",
     emoji: "🔥😭⚡",
     color: "bg-gradient-to-br from-pink-400 via-fuchsia-500 to-cyan-400",
-    imagePath: "/images/momo.png",
+    imagePath: "/images/momo-removebg.webp",
     description: {
       en: "Chaotic, meme-fueled Gen Z feedback with ✨unhinged✨ energy.",
       ko: "혼돈과 밈으로 가득 찬 Z세대 하이텐션 피드백!",
@@ -117,7 +117,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Dex",
     emoji: "🔧📷",
     color: "bg-gradient-to-r from-emerald-600 to-lime-500",
-    imagePath: "/images/dex.png",
+    imagePath: "/images/dex-removebg.webp",
     description: {
       en: "Technical evaluation focused on gear and settings",
       ko: "장비와 설정에 중점을 둔 기술적 평가",
@@ -133,7 +133,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Kyo",
     emoji: "🇯🇵",
     color: "bg-gradient-to-bl from-rose-500 to-zinc-500",
-    imagePath: "/images/kyo.png",
+    imagePath: "/images/kyo-removebg.webp",
     description: {
       en: "Japanese aesthetics enthusiast with anime references",
       ko: "일본 감성 집착형 사진가",
@@ -149,7 +149,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Theo",
     emoji: "🧠",
     color: "bg-gradient-to-br from-violet-700 via-indigo-700 to-gray-700",
-    imagePath: "/images/theo.png",
+    imagePath: "/images/theo-removebg.webp",
     description: {
       en: "Philosophical critic with art theory references",
       ko: "비평에 진심인 아트스쿨 출신의 철학적 사진가",
@@ -165,7 +165,7 @@ export const personaDisplayInfos: PersonaDisplayInfo[] = [
     characterName: "Sol",
     emoji: "🏔️✨",
     color: "bg-gradient-to-tr from-emerald-700 to-yellow-400",
-    imagePath: "/images/sol.png",
+    imagePath: "/images/sol-removebg.webp",
     description: {
       en: "Obsessed with epic nature and golden hour perfection",
       ko: "대자연과 황금빛 조명에 집착하는 풍경사진가",

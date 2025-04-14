@@ -1,0 +1,103 @@
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { apiRequest } from '@/lib/queryClient';
+
+interface User {
+  id: number;
+  email?: string;
+  googleId?: string;
+  displayName?: string;
+  photoURL?: string;
+  lastLogin?: string;
+  createdAt?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: () => void;
+  logout: () => void;
+  checkAuthStatus: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  login: () => {},
+  logout: () => {},
+  checkAuthStatus: async () => {},
+});
+
+// Provider component
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const checkAuthStatus = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiRequest('/api/auth/user', 'GET');
+
+      console.log('AuthContext: User is', response.isAuthenticated ? 'authenticated' : 'not authenticated');
+      
+      if (response.isAuthenticated && response.user) {
+        setUser(response.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 쿠키 상태 확인 (디버깅용)
+  useEffect(() => {
+    const hasCookies = document.cookie.length > 0;
+    console.log('AuthContext: Cookies present:', hasCookies);
+  }, []);
+
+  // 최초 로드 시 인증 상태 확인
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  // 로그인 처리
+  const login = () => {
+    window.location.href = '/api/auth/google';
+  };
+
+  // 로그아웃 처리
+  const logout = async () => {
+    try {
+      await apiRequest('/api/auth/logout', 'POST');
+      setUser(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      logout,
+      checkAuthStatus
+    }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// Custom hook to use auth context
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export default useAuth;

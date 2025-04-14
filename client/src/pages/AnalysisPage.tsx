@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getPersonaDisplayInfo, getCharacterName } from "@/lib/personaUtils";
+import { formatMarkdownEmphasis, createMarkup } from "@/lib/textUtils";
 import { toast } from "@/hooks/use-toast";
 import RadarChart from "@/components/RadarChart";
 import Navigation from "@/components/Navigation";
@@ -361,7 +362,7 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
 
                   {/* 평가 요약 - Strengths, Improvements 텍스트 제거 */}
                   <div className="px-4 sm:px-7 py-5 sm:py-6 bg-white space-y-4">
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-3">
                       <div className="bg-emerald-50 p-2 rounded-full mt-0.5">
                         <Star className="text-emerald-600 h-5 w-5" />
                       </div>
@@ -372,7 +373,7 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-3">
                       <div className="bg-amber-50 p-2 rounded-full mt-0.5">
                         <Sparkles className="text-amber-600 h-5 w-5" />
                       </div>
@@ -455,12 +456,84 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
                   variant="default"
                   size="icon"
                   onClick={() => {
+                    // 공유할 이미지 URL 가져오기
+                    const imageUrl = getPhotoUrl();
+                    
+                    // 공유 문구 구성: [mirror] + score + summary 문구 + by persona_name
+                    const shareTitle = `[mirror] ${analysis.overallScore}점 - ${analysis.summary}`;
+                    const shareText = `${analysis.summary}\n\n${analysis.overallScore}점 | by ${characterName}`;
+                    
+                    // 공유 링크: 현재 URL (분석 ID까지 포함)
+                    const shareUrl = window.location.href;
+                    
+                    // Web Share API 지원 확인
                     if (navigator.share) {
-                      navigator
-                        .share({
-                          title: `${analysis.summary} - ${characterName}의 사진 분석`,
-                          text: `${analysis.detectedGenre} 사진 (${analysis.overallScore}점)`,
-                          url: window.location.href,
+                      // 이미지 공유 지원 확인
+                      if (navigator.canShare && imageUrl && imageUrl.startsWith('http')) {
+                        // 이미지 파일 가져오기
+                        fetch(imageUrl)
+                          .then(res => res.blob())
+                          .then(blob => {
+                            const file = new File([blob], `mirror_analysis_${analysis.id}.jpg`, { type: 'image/jpeg' });
+                            
+                            // 이미지를 포함한 공유 시도
+                            const shareData = {
+                              title: shareTitle,
+                              text: shareText,
+                              url: shareUrl,
+                              files: [file]
+                            };
+                            
+                            // 이미지 공유 가능 여부 확인
+                            if (navigator.canShare(shareData)) {
+                              navigator.share(shareData)
+                                .then(() => {
+                                  toast({
+                                    title: t("share.success"),
+                                    description: t("share.successDesc"),
+                                  });
+                                })
+                                .catch((err) => {
+                                  if (err.name !== "AbortError") {
+                                    // 이미지 공유 실패 시 텍스트만 공유
+                                    navigator.share({
+                                      title: shareTitle,
+                                      text: shareText,
+                                      url: shareUrl,
+                                    }).catch((err) => {
+                                      if (err.name !== "AbortError") {
+                                        toast({
+                                          title: t("share.error"),
+                                          description: t("share.errorDesc"),
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    });
+                                  }
+                                });
+                            } else {
+                              // 이미지 공유 지원하지 않는 경우, 텍스트만 공유
+                              navigator.share({
+                                title: shareTitle,
+                                text: shareText,
+                                url: shareUrl,
+                              });
+                            }
+                          })
+                          .catch(() => {
+                            // 이미지 가져오기 실패 시 텍스트만 공유
+                            navigator.share({
+                              title: shareTitle,
+                              text: shareText,
+                              url: shareUrl,
+                            });
+                          });
+                      } else {
+                        // 이미지 공유 미지원 시 텍스트만 공유
+                        navigator.share({
+                          title: shareTitle,
+                          text: shareText,
+                          url: shareUrl,
                         })
                         .then(() => {
                           toast({
@@ -477,9 +550,12 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
                             });
                           }
                         });
+                      }
                     } else {
+                      // 공유 API 미지원 시 클립보드에 복사
+                      const shareFallbackText = `${shareTitle}\n${shareText}\n${shareUrl}`;
                       navigator.clipboard
-                        .writeText(window.location.href)
+                        .writeText(shareFallbackText)
                         .then(() => {
                           toast({
                             title: t("share.copied"),
@@ -513,9 +589,7 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
               >
                 <div className="w-full md:w-48 flex justify-center md:justify-start p-4 z-0">
                   <img
-                    src={personaInfo.imagePath
-                      .replace(".png", "-removebg.png")
-                      .replace(".jpg", "-removebg.png")}
+                    src={personaInfo.imagePath}
                     alt={`${characterName} 캐릭터`}
                     className="h-48 md:h-full object-contain"
                   />
@@ -549,9 +623,10 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
                       }`}
                     />
                   </div>
-                  <p className="text-slate-600 mb-4 whitespace-pre-line">
-                    {analysis.analysis.overall.text}
-                  </p>
+                  <p 
+                    className="text-slate-600 mb-4 whitespace-pre-line"
+                    dangerouslySetInnerHTML={{ __html: formatMarkdownEmphasis(analysis.analysis.overall.text) }}
+                  />
                   {expanded.includes("overall") && (
                     <div className="mt-4 space-y-4">
                       <AnalysisSection
@@ -617,11 +692,6 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
                       title: t("analysis.categories.creativity") || "창의성",
                       data: analysis.analysis.creativity,
                     },
-                    {
-                      key: "genreSpecific",
-                      title: t("analysis.categories.genreSpecific") || "장르 특화",
-                      data: analysis.analysis.genreSpecific,
-                    },
                   ].map((category) => (
                     <div key={category.key} className="mb-6">
                       <div className="flex items-center justify-between mb-3">
@@ -639,9 +709,12 @@ const AnalysisPage: React.FC<AnalysisPageProps> = () => {
                           )}
                         </h3>
                       </div>
-                      <p className="text-slate-600 mb-2">
-                        {category.data?.text || "별도 설명 없음"}
-                      </p>
+                      <p 
+                        className="text-slate-600 mb-2"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatMarkdownEmphasis(category.data?.text || "별도 설명 없음") 
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
