@@ -1,11 +1,8 @@
 // format.ts - 포맷팅 및 프롬프트 생성 유틸리티
 
-import _ from "lodash";
-import { personas, PersonaKey } from "./personas";
+import { generatePersonaPrompt } from "./personas";
 import { PhotoGenreDetectionResult } from "./types";
 import { buildPersonaPrompt, generateTranslationPrompt } from "./personaPromptTemplate";
-import { getGenerativeModel } from "./client";
-import { translateAnalysisAsWholeJson } from "./translate";
 
 /**
  * 시스템 프롬프트 생성 함수 - 영어로 프롬프트 생성하고 결과만 원하는 언어로 받음
@@ -16,15 +13,7 @@ export function createSystemPrompt(
   genreSummary: string | null,
   language: string = "ko",
 ): string {
-  // 페르소나 정보 가져오기
-  let persona;
-  if (Object.keys(personas).includes(personaKey)) {
-    persona = personas[personaKey as PersonaKey];
-  } else {
-    console.warn(`유효하지 않은 페르소나 키입니다: ${personaKey}. 기본 페르소나를 사용합니다.`);
-    persona = personas["supportive-friend"]; // 기본 페르소나 사용
-  }
-  
+  const persona = generatePersonaPrompt(personaKey);
   // personaPromptTemplate 모듈의 buildPersonaPrompt 함수 사용
   const prompt = buildPersonaPrompt(persona, personaKey, genreSummary, language);
   return prompt;
@@ -117,76 +106,91 @@ Confidence: ${confidence}${keywords}${reason}${technicalDetails}
 }
 
 /**
- * 평가 결과 포맷팅 함수 - 마크다운 형식으로 변환
+ * 사진 평가 결과 포맷팅 함수
+ * @param jsonResponse AI로부터 받은 JSON 응답
+ * @param language 원하는 결과 언어
+ * @param genreSummary 장르 요약 정보
+ * @returns 포맷팅된 평가 결과
  */
-export function formatEvaluationResult(jsonResponse: string, language: string = "ko"): string {
+export function formatEvaluationResult(
+  jsonResponse: string,
+  language: string = "ko",
+  genreSummary: string | null = null,
+): string {
   try {
     // JSON 파싱
     const data = JSON.parse(jsonResponse);
-    
-    // 여기에 언어별 라벨 정의
+
+    // 언어별 레이블 정의
     const labels = {
       ko: {
-        title: "분석 결과",
+        title: "사진 평가 보고서",
+        genre: "감지된 장르",
         summary: "요약",
-        overallScore: "종합 점수",
+        overallScore: "총점",
         tags: "태그",
-        language: "언어",
-        translated: "번역됨",
-        originalLanguage: "원본 언어",
-        categoryScores: "항목별 점수",
+        categoryScores: "카테고리별 점수",
         composition: "구도",
         lighting: "조명",
         color: "색상",
         focus: "초점",
         creativity: "창의성",
-        overall: "종합 평가",
-        strengths: "장점",
+        analysis: "분석",
+        overall: "전체 평가",
+        strengths: "강점",
         improvements: "개선점",
         modifications: "수정 제안",
-        personalTake: "개인적인 의견",
-        techniqueSuggestions: "기술적 제안",
-        suggestions: "제안 사항"
+        suggestions: "제안",
+        personalTake: "개인적인 견해",
+        techniqueSuggestions: "추천 기술",
+        language: "언어",
+        originalLanguage: "원본 언어",
+        targetLanguage: "대상 언어",
+        translated: "번역됨"
       },
       en: {
-        title: "Analysis Result",
+        title: "Photo Evaluation Report",
+        genre: "Detected Genre",
         summary: "Summary",
         overallScore: "Overall Score",
         tags: "Tags",
-        language: "Language",
-        translated: "Translated",
-        originalLanguage: "Original Language",
         categoryScores: "Category Scores",
         composition: "Composition",
         lighting: "Lighting",
         color: "Color",
         focus: "Focus",
         creativity: "Creativity",
-        overall: "Overall Evaluation",
+        analysis: "Analysis",
+        overall: "Overall Assessment",
         strengths: "Strengths",
-        improvements: "Improvements",
-        modifications: "Suggested Modifications",
+        improvements: "Areas for Improvement",
+        modifications: "Modification Suggestions",
+        suggestions: "Suggestions",
         personalTake: "Personal Take",
-        techniqueSuggestions: "Technical Suggestions",
-        suggestions: "Suggestions"
-      }
+        techniqueSuggestions: "Recommended Techniques",
+        language: "Language",
+        originalLanguage: "Original Language",
+        targetLanguage: "Target Language",
+        translated: "Translated"
+      },
+      // 추가 언어 지원 가능
     };
-    
-    // 언어 선택 (지원하지 않는 언어는 영어 기본값 사용)
+
+    // 기본 언어 설정
     const l = labels[language as keyof typeof labels] || labels.en;
-    
+
     // 결과 포맷팅
     let result = `# ${l.title}: ${data.detectedGenre}\n\n`;
-    
+
     // 요약 및 점수
     result += `## ${l.summary}\n${data.summary}\n\n`;
     result += `**${l.overallScore}:** ${data.overallScore}/100\n\n`;
-    
+
     // 태그
     if (data.tags && data.tags.length) {
       result += `**${l.tags}:** ${data.tags.join(", ")}\n\n`;
     }
-    
+
     // 언어 정보 (있는 경우)
     if (data.metadata) {
       result += `**${l.language}:** ${data.metadata.targetLanguage} `;
@@ -196,7 +200,7 @@ export function formatEvaluationResult(jsonResponse: string, language: string = 
         result += "\n\n";
       }
     }
-    
+
     // 카테고리별 점수
     result += `## ${l.categoryScores}\n`;
     for (const [category, score] of Object.entries(data.categoryScores || {})) {
@@ -204,10 +208,10 @@ export function formatEvaluationResult(jsonResponse: string, language: string = 
       result += `- **${categoryLabel}:** ${score}/100\n`;
     }
     result += "\n";
-    
+
     // 전체 분석
     result += `## ${l.overall}\n${data.analysis.overall.text}\n\n`;
-    
+
     // 강점
     result += `### ${l.strengths}\n`;
     data.analysis.overall.strengths.forEach(
@@ -216,7 +220,7 @@ export function formatEvaluationResult(jsonResponse: string, language: string = 
       },
     );
     result += "\n";
-    
+
     // 개선점
     result += `### ${l.improvements}\n`;
     data.analysis.overall.improvements.forEach(
@@ -225,7 +229,7 @@ export function formatEvaluationResult(jsonResponse: string, language: string = 
       },
     );
     result += "\n";
-    
+
     // 수정 제안 (배열 확인 및 적절한 포맷팅)
     result += `### ${l.modifications}\n`;
     // modifications가 배열인 경우 번호가 매겨진 목록으로 표시
@@ -240,7 +244,7 @@ export function formatEvaluationResult(jsonResponse: string, language: string = 
       result += `${data.analysis.overall.modifications}\n`;
     }
     result += "\n";
-    
+
     // 상세 카테고리별 분석
     for (const category of [
       "composition",
@@ -255,12 +259,12 @@ export function formatEvaluationResult(jsonResponse: string, language: string = 
         result += `**${l.suggestions}:** ${data.analysis[category].suggestions || "No specific suggestions provided."}\n\n`;
       }
     }
-    
+
     // 페르소나 개인적 견해 추가
     if (data.analysis.personalTake) {
       result += `## ${l.personalTake}\n${data.analysis.personalTake.text}\n\n`;
     }
-    
+
     // 추천 기술
     if (data.techniqueSuggestions && data.techniqueSuggestions.length) {
       result += `## ${l.techniqueSuggestions}\n`;
@@ -268,7 +272,7 @@ export function formatEvaluationResult(jsonResponse: string, language: string = 
         result += `${index + 1}. ${technique}\n`;
       });
     }
-    
+
     return result;
   } catch (error) {
     console.error("결과 포맷팅 오류:", error);
@@ -299,14 +303,6 @@ export async function translateEvaluationResult(
       targetLanguage.toLowerCase() === 'english'
     ) {
       return jsonResponse;
-    }
-    
-    // 페르소나 정보 가져오기
-    let persona = null;
-    if (Object.keys(personas).includes(personaKey)) {
-      persona = personas[personaKey as PersonaKey];
-    } else {
-      console.warn(`번역을 위한 페르소나 정보를 찾을 수 없습니다: ${personaKey}`);
     }
     
     // 번역할 필드 목록
@@ -363,12 +359,11 @@ export async function translateEvaluationResult(
     
     // 각 필드 번역
     for (const field of fieldsToTranslate) {
-      // 번역 프롬프트 생성 (페르소나 객체 전달)
+      // 번역 프롬프트 생성
       const translationPrompt = generateTranslationPrompt(
         field.value,
         targetLanguage,
-        personaKey,
-        persona
+        personaKey
       );
       
       // 번역 실행

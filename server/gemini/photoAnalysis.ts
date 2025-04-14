@@ -1,9 +1,13 @@
 // photoAnalysis.ts
-import { getGenerativeModel } from './client.js';
-import { detectMimeType } from './mime.js';
-import { createSystemPrompt, extractJson, summarizeGenre } from './format.js';
-import { AnalysisOptions } from './types.js';
-import { AnalysisResult } from '../../shared/schema.js';
+import { getGenerativeModel } from './client';
+import { detectMimeType } from './mime';
+import { 
+  createSystemPrompt, 
+  extractJson, 
+  summarizeGenre
+} from './format';
+import { AnalysisOptions, AnalysisResult } from './types';
+import { applyTranslationToAnalysis } from './translate';
 
 /**
  * 사진 분석 함수 - Gemini API를 사용하여 이미지 분석
@@ -80,7 +84,7 @@ export async function analyzePhoto(
     const cleanResponseText = extractJson(responseText);
     
     // JSON 파싱
-    const analysisResult = JSON.parse(cleanResponseText) as AnalysisResult;
+    let analysisResult = JSON.parse(cleanResponseText) as AnalysisResult;
     
     // overallScore를 정수로 변환 (소수점 값이 올 수 있음)
     if (typeof analysisResult.overallScore === 'number') {
@@ -91,6 +95,28 @@ export async function analyzePhoto(
     }
     
     console.log(`응답 분석 준비: ${JSON.stringify(analysisResult).substring(0, 100)}...`);
+    
+    // 언어에 관계없이 모든 텍스트를 영어로 변환한 후 대상 언어로 번역
+    // 영어 포함 모든 언어 처리를 위한 통합 과정 (영어인 경우 영어 최적화만 수행)
+    console.log(`2단계 번역 프로세스 시작: 모든 텍스트를 영어로 정규화 후 ${language}로 번역`);
+    
+    // 분석 결과에 2단계 번역 프로세스 적용
+    analysisResult = await applyTranslationToAnalysis(
+      analysisResult,
+      language,
+      persona
+    );
+    
+    console.log(`2단계 번역 프로세스 완료: ${language}`);
+    
+    // metadata가 정상적으로 추가되었는지 확인
+    if (!analysisResult.metadata) {
+      analysisResult.metadata = {
+        originalLanguage: "en",
+        targetLanguage: language,
+        translated: true
+      };
+    }
     
     // 결과 로깅
     console.log(`페르소나 스타일 '${persona}'로 분석 완료: ${analysisResult.detectedGenre} (${analysisResult.overallScore}점)`);
